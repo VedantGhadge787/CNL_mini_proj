@@ -8,16 +8,42 @@
 
 | Field | Value |
 |-------|-------|
-| **Current implementation step** | Step 06 — Spam Filter |
-| **Last completed step** | Step 05 — MIME & Attachments |
-| **Files with real logic** | `settings.py`, `logger.py`, `auth/user_manager.py`, `storage/mailbox.py`, `scripts/create_user.py`, `common/protocol_utils.py`, `smtp/server.py`, `smtp/session.py`, `scripts/run_smtp.py`, `mime/message_builder.py` |
+| **Current implementation step** | Step 07 — POP3 Server |
+| **Last completed step** | Step 06 — Spam Filter |
+| **Files with real logic** | `settings.py`, `logger.py`, `auth/user_manager.py`, `storage/mailbox.py`, `scripts/create_user.py`, `common/protocol_utils.py`, `smtp/server.py`, `smtp/session.py`, `scripts/run_smtp.py`, `mime/message_builder.py`, `spam/filter.py` |
 | **Files with full content** | All docs/, AGENTS.md, README.md, requirements.txt, .gitignore, .env.example, pytest.ini |
 | **Known issues** | None |
-| **Next action** | Begin Step 06: implement spam/filter.py, tests/test_spam_filter.py |
+| **Next action** | Begin Step 07: implement pop3/server.py, pop3/session.py, scripts/run_pop3.py, tests/test_pop3_session.py |
 
 ---
 
 ## Log Entries (newest first)
+
+### [2026-10-25 19:05] Step 06: Spam Filter
+
+- **Changed:**
+  - Implemented `src/mailsys/spam/filter.py`:
+    - `SpamFilter`: loads keywords from `keywords.txt` with case-insensitive whitespace/comment-stripping; scores subject and body text.
+    - `SpamFilter.reload()`: thread-safe keyword reloading.
+    - `SpamFilter.score_message(raw: bytes) -> tuple[int, bool]`: calculates keyword frequency against configurable threshold.
+    - Module singleton `spam_filter` exported in `src/mailsys/spam/__init__.py`.
+  - Updated `src/mailsys/smtp/session.py`:
+    - Wired `spam_filter.score_message` into `_deliver_or_relay`.
+    - Added `X-Spam-Flag: YES/NO` and `X-Spam-Score: <score>` header injection before storage.
+    - Routed messages to `data/mailboxes/<user>/Spam/new/` when flagged as spam (`spam=True`), or `data/mailboxes/<user>/new/` when clean (`spam=False`).
+  - Implemented comprehensive test suite in `tests/test_spam_filter.py`:
+    - Clean message zero score.
+    - Case-insensitive keyword matching.
+    - Threshold boundary testing (4 -> False, 5 -> True, 6 -> True).
+    - Custom keywords file and dynamic reloading.
+    - SMTP delivery pipeline integration for both spam and ham messages.
+- **Why:** FR-13 / FR-14 keyword-based spam scoring and isolated Spam folder delivery.
+- **Key decisions:**
+  - Score is the total occurrence count of all matched keywords across Subject and body.
+  - Header annotation strips pre-existing `X-Spam-*` headers to prevent header spoofing before writing canonical tags.
+- **Interfaces added:** `SpamFilter.score_message`, `SpamFilter.reload`, `spam_filter` singleton.
+- **Tests:** `tests/test_spam_filter.py` all 7 tests pass; full test suite (55 tests) all pass.
+- **Next:** Begin Step 07 — POP3 Server
 
 ### [2026-10-25 18:58] Step 05: MIME & Attachments
 

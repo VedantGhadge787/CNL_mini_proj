@@ -19,12 +19,15 @@ State transitions:
 """
 from __future__ import annotations
 
+import email.policy
 import enum
 import socket
 from mailsys.auth.user_manager import user_exists
 from mailsys.common.logger import get_logger
 from mailsys.common.protocol_utils import recv_line, send_reply
 from mailsys.config.settings import settings
+from mailsys.mime.message_builder import parse_message
+from mailsys.spam.filter import spam_filter
 from mailsys.storage.mailbox import deliver
 
 logger = get_logger(__name__)
@@ -221,14 +224,29 @@ class SMTPSession:
         self._reset()
 
     def _deliver_or_relay(self, raw_bytes: bytes) -> None:
-        """Route message to local user mailbox or external relay."""
+        """Route message to local user mailbox or external relay with spam filtering."""
         local_domain = getattr(settings, "local_domain", "localhost")
+        try:
+            score, is_spam = spam_filter.score_message(raw_bytes)
+            msg = parse_message(raw_bytes)
+            if "X-Spam-Flag" in msg:
+                del msg["X-Spam-Flag"]
+            if "X-Spam-Score" in msg:
+                del msg["X-Spam-Score"]
+            msg["X-Spam-Flag"] = "YES" if is_spam else "NO"
+            msg["X-Spam-Score"] = str(score)
+            annotated_bytes = msg.as_bytes(policy=email.policy.SMTP)
+        except Exception as e:
+            self.logger.warning("Failed annotating spam headers: %s", e)
+            annotated_bytes = raw_bytes
+            is_spam = False
+
         for recipient in self.rcpt_to:
             user, _, domain = recipient.partition("@")
             if domain.lower() == local_domain.lower():
                 try:
-                    deliver(user, raw_bytes, spam=False)
-                    self.logger.info("Delivered mail to local user '%s'", user)
+                    deliver(user, annotated_bytes, spam=is_spam)
+                    self.logger.info("Delivered mail to local user '%s' (spam=%s)", user, is_spam)
                 except Exception as e:
                     self.logger.exception("Failed delivering to '%s': %s", user, e)
             else:

@@ -1,6 +1,6 @@
 # Step 06 — Spam Filter
 
-**Status:** [ ] not started
+**Status:** [x] complete
 
 ---
 
@@ -157,13 +157,13 @@ def deliver(username: str, raw_message: bytes, spam: bool = False) -> Path:
 
 ## 5. Acceptance Criteria
 
-- [ ] `spam_filter.score_message(raw)` returns `(0, False)` for a clean message.
-- [ ] A message containing 5 keyword matches scores `(5, True)`.
-- [ ] Spam messages are delivered to `data/mailboxes/<user>/Spam/new/`.
-- [ ] Spam messages have `X-Spam-Flag: YES` and `X-Spam-Score: 5` (or correct value) headers.
-- [ ] Ham messages have `X-Spam-Flag: NO`.
-- [ ] `spam_filter.reload()` picks up new keywords without restart.
-- [ ] `pytest tests/test_spam_filter.py -v` passes.
+- [x] `spam_filter.score_message(raw)` returns `(0, False)` for a clean message.
+- [x] A message containing 5 keyword matches scores `(5, True)`.
+- [x] Spam messages are delivered to `data/mailboxes/<user>/Spam/new/`.
+- [x] Spam messages have `X-Spam-Flag: YES` and `X-Spam-Score: 5` (or correct value) headers.
+- [x] Ham messages have `X-Spam-Flag: NO`.
+- [x] `spam_filter.reload()` picks up new keywords without restart.
+- [x] `pytest tests/test_spam_filter.py -v` passes.
 
 ---
 
