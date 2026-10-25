@@ -8,16 +8,30 @@
 
 | Field | Value |
 |-------|-------|
-| **Current implementation step** | Step 08 — MX Lookup & Relay |
-| **Last completed step** | Step 07 — POP3 Server |
-| **Files with real logic** | `settings.py`, `logger.py`, `auth/user_manager.py`, `storage/mailbox.py`, `scripts/create_user.py`, `common/protocol_utils.py`, `smtp/server.py`, `smtp/session.py`, `scripts/run_smtp.py`, `mime/message_builder.py`, `spam/filter.py`, `pop3/server.py`, `pop3/session.py`, `scripts/run_pop3.py` |
+| **Current implementation step** | Step 09 — Client UI |
+| **Last completed step** | Step 08 — MX Lookup & Relay |
+| **Files with real logic** | `settings.py`, `logger.py`, `auth/user_manager.py`, `storage/mailbox.py`, `scripts/create_user.py`, `common/protocol_utils.py`, `smtp/server.py`, `smtp/session.py`, `smtp/relay.py`, `scripts/run_smtp.py`, `mime/message_builder.py`, `spam/filter.py`, `pop3/server.py`, `pop3/session.py`, `scripts/run_pop3.py` |
 | **Files with full content** | All docs/, AGENTS.md, README.md, requirements.txt, .gitignore, .env.example, pytest.ini |
 | **Known issues** | None |
-| **Next action** | Begin Step 08: implement MX lookup and outbound SMTP relay |
+| **Next action** | Begin Step 09: implement the Tkinter mail client |
 
 ---
 
 ## Log Entries (newest first)
+
+### [2026-10-25 20:15] Step 08: MX Lookup & Relay
+
+- **Changed:**
+  - Implemented `src/mailsys/smtp/relay.py` to resolve and priority-sort MX records, attempt outbound SMTP delivery to each host, log DNS/SMTP failures, and create a local bounce after all relay attempts fail.
+  - Wired `SMTPSession._deliver_or_relay` to send spam-annotated messages and the original envelope sender through `relay_message` for external recipients.
+  - Added `tests/test_smtp_relay.py` for DNS result ordering/failures/timeouts, SMTP failover and recipient refusal, local bounce behavior, non-local sender handling, and SMTP session integration.
+- **Why:** Implements FR-7, forwarding non-local mail using DNS MX lookup and outbound SMTP.
+- **Key decisions:**
+  - Used `dnspython` for DNS and `smtplib` as the permitted SMTP client library.
+  - Bounces are delivered only to known users at the configured local domain. Live outbound mail was not sent; SMTP success/failure behavior is verified with test doubles.
+- **Interfaces added:** `lookup_mx(domain) -> list[str]`, `relay_message(recipient, raw_bytes, sender) -> bool`.
+- **Tests:** Full project suite: 68 tests pass. Live `gmail.com` MX lookup returned five priority-sorted hosts; a nonexistent `.invalid` domain returned `[]`.
+- **Next:** Begin Step 09 — Client UI
 
 ### [2026-10-25 20:00] Step 07: POP3 Server
 

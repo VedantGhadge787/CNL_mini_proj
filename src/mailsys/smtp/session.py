@@ -27,6 +27,7 @@ from mailsys.common.logger import get_logger
 from mailsys.common.protocol_utils import recv_line, send_reply
 from mailsys.config.settings import settings
 from mailsys.mime.message_builder import parse_message
+from mailsys.smtp.relay import relay_message
 from mailsys.spam.filter import spam_filter
 from mailsys.storage.mailbox import deliver
 
@@ -250,7 +251,11 @@ class SMTPSession:
                 except Exception as e:
                     self.logger.exception("Failed delivering to '%s': %s", user, e)
             else:
-                self.logger.info("External relay recipient queued: %s", recipient)
+                delivered = relay_message(
+                    recipient, annotated_bytes, sender=self.mail_from or ""
+                )
+                if not delivered:
+                    self.logger.warning("External relay failed for %s", recipient)
 
     def _reset(self) -> None:
         """Reset transaction state back to IDENTIFIED."""
