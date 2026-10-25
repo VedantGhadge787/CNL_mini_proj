@@ -1,6 +1,6 @@
 # Step 02 — Config & Logging
 
-**Status:** [ ] not started
+**Status:** [x] done
 
 ---
 
@@ -143,11 +143,12 @@ logger.warning("Unknown command: %s", cmd)
 
 ## 5. Acceptance Criteria
 
-- [ ] `from mailsys.config.settings import settings` succeeds and `settings.smtp_port == 2525`.
-- [ ] Setting `SMTP_PORT=9999` in the environment before import makes `settings.smtp_port == 9999`.
-- [ ] `from mailsys.common.logger import get_logger; logger = get_logger("test")` succeeds.
-- [ ] After calling `get_logger`, `data/logs/mailsys.log` is created.
-- [ ] Calling `get_logger` twice with the same name does not duplicate handlers.
+- [x] `from mailsys.config.settings import settings` succeeds and `settings.smtp_port == 2525`.
+- [x] Setting `SMTP_PORT=9999` in the environment before import makes `settings.smtp_port == 9999`.
+- [x] `from mailsys.common.logger import get_logger; logger = get_logger("test")` succeeds.
+- [x] After calling `get_logger`, `data/logs/mailsys.log` is created.
+- [x] Calling `get_logger` twice with the same name does not duplicate handlers.
+
 
 ---
 

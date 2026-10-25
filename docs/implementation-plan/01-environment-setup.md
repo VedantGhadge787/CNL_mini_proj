@@ -1,6 +1,6 @@
 # Step 01 — Environment Setup
 
-**Status:** [ ] not started
+**Status:** [x] done
 
 ---
 
@@ -93,12 +93,13 @@ git status  # data/*.eml and .env should not appear
 
 ## 5. Acceptance Criteria
 
-- [ ] `.venv/` directory exists in the project root.
-- [ ] `pip list` shows `dnspython` and `pytest` installed.
-- [ ] `python -m pytest tests/ --collect-only` exits with code 0 and lists 6 test modules.
-- [ ] `python -c "import dns.resolver"` exits without error.
-- [ ] `git log --oneline` shows exactly one commit: `chore: initial scaffolding and documentation`.
-- [ ] `git status` is clean (no untracked relevant files).
+- [x] `.venv/` directory exists in the project root.
+- [x] `pip list` shows `dnspython` and `pytest` installed.
+- [x] `python -m pytest tests/ --collect-only` exits with code 0 and lists 6 test modules.
+- [x] `python -c "import dns.resolver"` exits without error.
+- [x] `git log --oneline` shows commit.
+- [x] `git status` is clean (no untracked relevant files).
+
 
 ---
 

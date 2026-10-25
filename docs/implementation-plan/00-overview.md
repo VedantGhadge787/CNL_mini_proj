@@ -9,8 +9,8 @@ See [index.md](../index.md) for full requirements, [architecture.md](../architec
 | # | Title | Depends On | Estimated Effort | Status |
 |---|-------|-----------|-----------------|--------|
 | 00 | Scaffolding & Documentation | — | 2–3 h | ✅ Done |
-| 01 | Environment Setup | 00 | 30 min | [ ] |
-| 02 | Config & Logging | 01 | 1 h | [ ] |
+| 01 | Environment Setup | 00 | 30 min | [x] |
+| 02 | Config & Logging | 01 | 1 h | [x] |
 | 03 | User Management & Storage | 02 | 2–3 h | [ ] |
 | 04 | SMTP Server Core | 03 | 4–5 h | [ ] |
 | 05 | MIME & Attachments | 03 | 2 h | [ ] |

@@ -8,16 +8,48 @@
 
 | Field | Value |
 |-------|-------|
-| **Current implementation step** | Step 01 — Environment Setup |
-| **Last completed step** | Step 00 — Scaffolding (this session) |
-| **Files with real logic** | None yet — all source files are stubs |
-| **Files with full content** | All docs/, AGENTS.md, README.md, requirements.txt, .gitignore, .env.example |
+| **Current implementation step** | Step 03 — User Management & Storage |
+| **Last completed step** | Step 02 — Config & Logging |
+| **Files with real logic** | `src/mailsys/config/settings.py`, `src/mailsys/common/logger.py` |
+| **Files with full content** | All docs/, AGENTS.md, README.md, requirements.txt, .gitignore, .env.example, pytest.ini |
 | **Known issues** | None |
-| **Next action** | Begin Step 01: create virtualenv, install deps, run `pytest --collect-only`, `git init` |
+| **Next action** | Begin Step 03: implement auth/user_manager.py, storage/mailbox.py, scripts/create_user.py, tests/test_mailbox.py |
 
 ---
 
 ## Log Entries (newest first)
+
+### [2026-10-25 13:16] Step 02: Config & Logging
+
+- **Changed:**
+  - Implemented `src/mailsys/config/settings.py` with dataclass, lazy environment loading via default factories, property paths (`mailboxes_dir`, `logs_dir`, `db_path`), and module-level `settings` singleton.
+  - Implemented `src/mailsys/common/logger.py` with `get_logger`, `StreamHandler`, and `RotatingFileHandler` writing to `data/logs/mailsys.log` (5 MB, 3 backups) with handler deduplication.
+  - Verified `src/mailsys/config/__init__.py` and `src/mailsys/common/__init__.py` re-exports.
+  - Created unit tests in `tests/test_config_logging.py` covering defaults, environment variable overrides, property paths, handler deduplication, and rotating file logging.
+  - Configured `.venv/Lib/site-packages/mailsys.pth` for permanent clean package resolution.
+- **Why:** Every subsequent module requires access to centralized runtime configuration and uniform logging before any protocol or storage features can be implemented.
+- **Key decisions:**
+  - Settings configured as module-level singleton dataclass with lazy field factories.
+  - Handlers automatically guarded against duplication for clean execution in testing and multi-import environments.
+- **Interfaces added:** `settings` (Settings), `get_logger(name: str) -> Logger`.
+- **Tests:** `tests/test_config_logging.py` passed; entire test suite (47 tests) passed.
+- **Next:** Begin Step 03 — User Management & Storage
+
+
+### [2026-10-25 13:12] Step 01: Environment Setup
+
+- **Changed:**
+  - Created `.venv` virtual environment (Python 3.12)
+  - Installed dependencies `dnspython>=2.6` and `pytest>=8.0`
+  - Created `pytest.ini` and updated `tests/conftest.py` to ensure `src/` is on `sys.path`
+  - Verified git repository initialized and initial commit pushed to remote
+- **Why:** Establish clean, reproducible development environment and ensure test runner discovers and executes test stubs.
+- **Key decisions:**
+  - Pinned `pytest` configuration in `pytest.ini` with `pythonpath = src`
+- **Interfaces added/changed:** None
+- **Tests:** `pytest --collect-only` discovered 41 items across 6 test modules; `pytest tests/ -v` passed all 41 test stubs
+- **Next:** Begin Step 02 — Config & Logging
+
 
 ### [2026-10-25 12:32] Step 00: Scaffolding and Documentation
 

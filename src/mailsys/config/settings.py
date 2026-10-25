@@ -19,11 +19,6 @@ Environment variables (with defaults):
     LOG_LEVEL         — logging verbosity              (default: INFO)
     MAX_MESSAGE_SIZE  — max SMTP message bytes         (default: 10485760)
     SOCKET_TIMEOUT    — per-connection timeout (s)     (default: 300)
-
-Imports needed:
-    import os
-    from dataclasses import dataclass, field
-    from pathlib import Path
 """
 import os
 from dataclasses import dataclass, field
@@ -32,14 +27,56 @@ from pathlib import Path
 
 @dataclass
 class Settings:
-    """Runtime configuration loaded from environment variables."""
+    """Runtime configuration loaded lazily from environment variables."""
 
-    # TODO: Add all fields with os.environ.get() defaults
-    # TODO: Add properties: mailboxes_dir, logs_dir, db_path
+    smtp_host: str = field(
+        default_factory=lambda: os.environ.get("SMTP_HOST", "0.0.0.0")
+    )
+    smtp_port: int = field(
+        default_factory=lambda: int(os.environ.get("SMTP_PORT", "2525"))
+    )
+    pop3_host: str = field(
+        default_factory=lambda: os.environ.get("POP3_HOST", "0.0.0.0")
+    )
+    pop3_port: int = field(
+        default_factory=lambda: int(os.environ.get("POP3_PORT", "2110"))
+    )
+    local_domain: str = field(
+        default_factory=lambda: os.environ.get("LOCAL_DOMAIN", "localhost")
+    )
+    data_dir: Path = field(
+        default_factory=lambda: Path(os.environ.get("DATA_DIR", "data"))
+    )
+    spam_threshold: int = field(
+        default_factory=lambda: int(os.environ.get("SPAM_THRESHOLD", "5"))
+    )
+    log_level: str = field(
+        default_factory=lambda: os.environ.get("LOG_LEVEL", "INFO")
+    )
+    max_message_size: int = field(
+        default_factory=lambda: int(
+            os.environ.get("MAX_MESSAGE_SIZE", str(10 * 1024 * 1024))
+        )
+    )
+    socket_timeout: int = field(
+        default_factory=lambda: int(os.environ.get("SOCKET_TIMEOUT", "300"))
+    )
 
-    pass
+    @property
+    def mailboxes_dir(self) -> Path:
+        """Root directory for per-user Maildir storage."""
+        return self.data_dir / "mailboxes"
+
+    @property
+    def logs_dir(self) -> Path:
+        """Directory where log files are stored."""
+        return self.data_dir / "logs"
+
+    @property
+    def db_path(self) -> Path:
+        """Path to SQLite database file."""
+        return self.data_dir / "users.db"
 
 
-# Module-level singleton
+# Module-level singleton — import this everywhere
 settings = Settings()
-
