@@ -1,0 +1,18 @@
+# mini-mail-system spam keyword list
+# One keyword or phrase per line. Case-insensitive.
+# Lines starting with # are ignored.
+free money
+click here
+winner
+you have been selected
+claim your prize
+limited time offer
+act now
+guaranteed
+no risk
+100% free
+make money fast
+work from home
+earn extra cash
+congratulations you won
+dear friend
