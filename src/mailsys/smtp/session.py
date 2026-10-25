@@ -17,6 +17,8 @@ State transitions:
   CONNECTED -> GREETED -> IDENTIFIED -> MAIL -> RCPT -> DATA -> IDENTIFIED
   QUIT terminates the session from any state.
 """
+from __future__ import annotations
+
 import enum
 import socket
 from mailsys.auth.user_manager import user_exists

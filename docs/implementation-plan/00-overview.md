@@ -13,7 +13,7 @@ See [index.md](../index.md) for full requirements, [architecture.md](../architec
 | 02 | Config & Logging | 01 | 1 h | [x] |
 | 03 | User Management & Storage | 02 | 2–3 h | [x] |
 | 04 | SMTP Server Core | 03 | 4–5 h | [x] |
-| 05 | MIME & Attachments | 03 | 2 h | [ ] |
+| 05 | MIME & Attachments | 03 | 2 h | [x] |
 | 06 | Spam Filter | 04, 05 | 1–2 h | [ ] |
 | 07 | POP3 Server | 03, 04 | 3–4 h | [ ] |
 | 08 | MX Lookup & Relay | 04 | 2 h | [ ] |

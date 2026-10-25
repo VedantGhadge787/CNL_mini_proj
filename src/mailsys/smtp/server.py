@@ -6,6 +6,8 @@ Thread-per-connection SMTP server implemented with raw Python sockets.
 Listens on the configured host and port (default: 0.0.0.0:2525).
 For each incoming connection, spawns a daemon thread executing `SMTPSession.handle()`.
 """
+from __future__ import annotations
+
 import socket
 import threading
 from mailsys.common.logger import get_logger

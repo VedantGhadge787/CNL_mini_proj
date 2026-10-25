@@ -1,6 +1,6 @@
 # Step 05 — MIME & Attachments
 
-**Status:** [ ] not started
+**Status:** [x] complete
 
 ---
 
@@ -158,14 +158,14 @@ def extract_attachments(msg: EmailMessage, dest_dir: Path) -> list[Path]:
 
 ## 5. Acceptance Criteria
 
-- [ ] `build_message` returns bytes parseable by `email.parser.BytesParser`.
-- [ ] A text-only message has `Content-Type: text/plain`.
-- [ ] A message with HTML has `Content-Type: multipart/alternative`.
-- [ ] A message with an attachment has `Content-Type: multipart/mixed`.
-- [ ] `get_text_body(parse_message(raw))` recovers the original body text.
-- [ ] `extract_attachments` saves attachment bytes exactly as sent.
-- [ ] Path traversal attempt (`../../evil.py`) is sanitised to `evil.py`.
-- [ ] `pytest tests/test_mime.py -v` passes.
+- [x] `build_message` returns bytes parseable by `email.parser.BytesParser`.
+- [x] A text-only message has `Content-Type: text/plain`.
+- [x] A message with HTML has `Content-Type: multipart/alternative`.
+- [x] A message with an attachment has `Content-Type: multipart/mixed`.
+- [x] `get_text_body(parse_message(raw))` recovers the original body text.
+- [x] `extract_attachments` saves attachment bytes exactly as sent.
+- [x] Path traversal attempt (`../../evil.py`) is sanitised to `evil.py`.
+- [x] `pytest tests/test_mime.py -v` passes.
 
 ---
 

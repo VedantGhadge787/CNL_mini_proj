@@ -8,16 +8,36 @@
 
 | Field | Value |
 |-------|-------|
-| **Current implementation step** | Step 05 — MIME & Attachments |
-| **Last completed step** | Step 04 — SMTP Server Core |
-| **Files with real logic** | `settings.py`, `logger.py`, `auth/user_manager.py`, `storage/mailbox.py`, `scripts/create_user.py`, `common/protocol_utils.py`, `smtp/server.py`, `smtp/session.py`, `scripts/run_smtp.py` |
+| **Current implementation step** | Step 06 — Spam Filter |
+| **Last completed step** | Step 05 — MIME & Attachments |
+| **Files with real logic** | `settings.py`, `logger.py`, `auth/user_manager.py`, `storage/mailbox.py`, `scripts/create_user.py`, `common/protocol_utils.py`, `smtp/server.py`, `smtp/session.py`, `scripts/run_smtp.py`, `mime/message_builder.py` |
 | **Files with full content** | All docs/, AGENTS.md, README.md, requirements.txt, .gitignore, .env.example, pytest.ini |
 | **Known issues** | None |
-| **Next action** | Begin Step 05: implement mime/message_builder.py, tests/test_mime.py |
+| **Next action** | Begin Step 06: implement spam/filter.py, tests/test_spam_filter.py |
 
 ---
 
 ## Log Entries (newest first)
+
+### [2026-10-25 18:58] Step 05: MIME & Attachments
+
+- **Changed:**
+  - Implemented `src/mailsys/mime/message_builder.py`:
+    - `build_message`: builds RFC 2822/MIME compliant bytes for plain text, `multipart/alternative` (HTML), and `multipart/mixed` (attachments) with CRLF endings using `email.policy.SMTP`.
+    - `parse_message`: parses raw bytes into `EmailMessage` using `email.policy.default`.
+    - `get_text_body`: extracts plain-text body and normalizes line endings.
+    - `get_html_body`: extracts HTML body if present.
+    - `extract_attachments`: extracts and saves attachment parts while preventing path traversal (sanitizing both POSIX and Windows separators).
+    - `list_attachments`: inspects attachment metadata `(filename, content_type, size)` without writing to disk.
+    - Added `from __future__ import annotations` across `src/mailsys/smtp/server.py`, `src/mailsys/smtp/session.py`, `src/mailsys/mime/message_builder.py`, and `tests/test_mime.py` for Python 3.9+ typing compatibility.
+  - Implemented comprehensive test suite in `tests/test_mime.py` covering plain text, HTML alternative, attachments, round-trip serialization/parsing, path traversal attack prevention, inline part filtering, and MIME type guessing.
+- **Why:** Required by the client UI for message composition and rendering, and by server components (SMTP / POP3 / Spam filter) for message parsing.
+- **Key decisions:**
+  - stdlib `email` package only (`EmailMessage`, `email.policy.SMTP`, `email.policy.default`).
+  - Path traversal protection strips leading directories and relative traversal elements (`../`, `..\`) across operating systems.
+- **Interfaces added:** `build_message`, `parse_message`, `get_text_body`, `get_html_body`, `extract_attachments`, `list_attachments`.
+- **Tests:** `tests/test_mime.py` all 8 tests pass; full test suite (53 tests) all pass.
+- **Next:** Begin Step 06 — Spam Filter
 
 ### [2026-10-25 13:33] Step 04: SMTP Server Core
 
