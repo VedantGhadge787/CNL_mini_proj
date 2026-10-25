@@ -8,16 +8,32 @@
 
 | Field | Value |
 |-------|-------|
-| **Current implementation step** | Step 07 — POP3 Server |
-| **Last completed step** | Step 06 — Spam Filter |
-| **Files with real logic** | `settings.py`, `logger.py`, `auth/user_manager.py`, `storage/mailbox.py`, `scripts/create_user.py`, `common/protocol_utils.py`, `smtp/server.py`, `smtp/session.py`, `scripts/run_smtp.py`, `mime/message_builder.py`, `spam/filter.py` |
+| **Current implementation step** | Step 08 — MX Lookup & Relay |
+| **Last completed step** | Step 07 — POP3 Server |
+| **Files with real logic** | `settings.py`, `logger.py`, `auth/user_manager.py`, `storage/mailbox.py`, `scripts/create_user.py`, `common/protocol_utils.py`, `smtp/server.py`, `smtp/session.py`, `scripts/run_smtp.py`, `mime/message_builder.py`, `spam/filter.py`, `pop3/server.py`, `pop3/session.py`, `scripts/run_pop3.py` |
 | **Files with full content** | All docs/, AGENTS.md, README.md, requirements.txt, .gitignore, .env.example, pytest.ini |
 | **Known issues** | None |
-| **Next action** | Begin Step 07: implement pop3/server.py, pop3/session.py, scripts/run_pop3.py, tests/test_pop3_session.py |
+| **Next action** | Begin Step 08: implement MX lookup and outbound SMTP relay |
 
 ---
 
 ## Log Entries (newest first)
+
+### [2026-10-25 20:00] Step 07: POP3 Server
+
+- **Changed:**
+  - Implemented `src/mailsys/pop3/server.py` with a raw-socket listener, per-connection daemon threads, configured socket timeouts, logging, and clean shutdown.
+  - Implemented `src/mailsys/pop3/session.py` with AUTHORIZATION, TRANSACTION, UPDATE, and CLOSED states; USER/PASS authentication; non-blocking exclusive mailbox locking; STAT, LIST, RETR, DELE, NOOP, RSET, UIDL, TOP, and QUIT commands.
+  - POP3 deletion marks remain in memory until successful QUIT; disconnected sessions release their mailbox lock without deleting messages.
+  - Added dot-stuffing for retrieved message data and stable UIDL values from the mailbox storage helper.
+  - Implemented `scripts/run_pop3.py` and expanded `tests/test_pop3_session.py` to cover command behavior, deletion/update semantics, concurrency, and listener startup/shutdown.
+- **Why:** Implements FR-8 through FR-10 and the POP3 state/concurrency design described in the architecture.
+- **Key decisions:**
+  - Reused the existing per-user re-entrant mailbox lock and mailbox/authentication helpers.
+  - `USER` rejects unknown accounts; failed `PASS` clears the pending username so a fresh USER command is required.
+- **Interfaces added:** `POP3Server.start/stop`, `POP3Session.handle`, and `POP3State`.
+- **Tests:** `tests/test_pop3_session.py` all 15 tests pass; full test suite all 58 tests pass.
+- **Next:** Begin Step 08 — MX Lookup & Relay
 
 ### [2026-10-25 19:05] Step 06: Spam Filter
 

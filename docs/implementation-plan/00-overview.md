@@ -15,7 +15,7 @@ See [index.md](../index.md) for full requirements, [architecture.md](../architec
 | 04 | SMTP Server Core | 03 | 4–5 h | [x] |
 | 05 | MIME & Attachments | 03 | 2 h | [x] |
 | 06 | Spam Filter | 04, 05 | 1–2 h | [x] |
-| 07 | POP3 Server | 03, 04 | 3–4 h | [ ] |
+| 07 | POP3 Server | 03, 04 | 3–4 h | [x] |
 | 08 | MX Lookup & Relay | 04 | 2 h | [ ] |
 | 09 | Client UI | 04, 07 | 3–4 h | [ ] |
 | 10 | Testing & Validation | 04–09 | 3 h | [ ] |

@@ -1,6 +1,6 @@
 # Step 07 — POP3 Server
 
-**Status:** [ ] not started
+**Status:** [x] done
 
 ---
 
@@ -276,20 +276,20 @@ if __name__ == "__main__":
 
 ## 5. Acceptance Criteria
 
-- [ ] `python scripts/run_pop3.py` starts without error.
-- [ ] Telnet to port 2110 shows `+OK POP3 server ready`.
-- [ ] `USER alice` → `+OK alice`.
-- [ ] `PASS wrong` → `-ERR invalid credentials`.
-- [ ] `PASS secret` → `+OK logged in`.
-- [ ] `STAT` → `+OK N <bytes>`.
-- [ ] `LIST` → multi-line listing terminated by `.`.
-- [ ] `RETR 1` → `+OK ... octets` followed by message and `.`.
-- [ ] `DELE 1` → `+OK message 1 deleted`.
-- [ ] `RSET` → `+OK` and deletion mark cleared.
-- [ ] `QUIT` → message deleted from disk (UPDATE state executed).
-- [ ] Second simultaneous POP3 session for same user → `-ERR [IN-USE]`.
-- [ ] `UIDL` returns stable UIDs matching MD5 of filename.
-- [ ] `pytest tests/test_pop3_session.py -v` passes.
+- [x] `python scripts/run_pop3.py` starts without error.
+- [x] TCP client receives `+OK POP3 server ready`.
+- [x] `USER alice` → `+OK alice`.
+- [x] `PASS wrong` → `-ERR invalid credentials`.
+- [x] `PASS secret` → `+OK logged in`.
+- [x] `STAT` → `+OK N <bytes>`.
+- [x] `LIST` → multi-line listing terminated by `.`.
+- [x] `RETR 1` → `+OK ... octets` followed by message and `.`.
+- [x] `DELE 1` → `+OK message 1 deleted`.
+- [x] `RSET` → `+OK` and deletion mark cleared.
+- [x] `QUIT` → message deleted from disk (UPDATE state executed).
+- [x] Second simultaneous POP3 session for same user → `-ERR [IN-USE]`.
+- [x] `UIDL` returns stable UIDs matching MD5 of filename.
+- [x] `pytest tests/test_pop3_session.py` passes.
 
 ---
 
