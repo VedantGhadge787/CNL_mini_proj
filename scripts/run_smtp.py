@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 scripts/run_smtp.py
 ===================
@@ -21,9 +22,17 @@ logger = get_logger("run_smtp")
 
 def main() -> None:
     """Instantiate and run the SMTPServer until interrupted."""
-    # TODO: Initialize SMTPServer and call server.start()
-    # Handle KeyboardInterrupt gracefully with server.stop()
-    raise NotImplementedError
+    server = SMTPServer()
+    print(f"SMTP server starting on {server.host}:{server.port} ...")
+    try:
+        server.start()
+    except KeyboardInterrupt:
+        print("\nShutting down SMTP server...")
+        server.stop()
+    except Exception as e:
+        logger.exception("Fatal server error: %s", e)
+        server.stop()
+        sys.exit(1)
 
 
 if __name__ == "__main__":

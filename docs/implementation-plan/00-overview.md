@@ -11,8 +11,8 @@ See [index.md](../index.md) for full requirements, [architecture.md](../architec
 | 00 | Scaffolding & Documentation | — | 2–3 h | ✅ Done |
 | 01 | Environment Setup | 00 | 30 min | [x] |
 | 02 | Config & Logging | 01 | 1 h | [x] |
-| 03 | User Management & Storage | 02 | 2–3 h | [ ] |
-| 04 | SMTP Server Core | 03 | 4–5 h | [ ] |
+| 03 | User Management & Storage | 02 | 2–3 h | [x] |
+| 04 | SMTP Server Core | 03 | 4–5 h | [x] |
 | 05 | MIME & Attachments | 03 | 2 h | [ ] |
 | 06 | Spam Filter | 04, 05 | 1–2 h | [ ] |
 | 07 | POP3 Server | 03, 04 | 3–4 h | [ ] |

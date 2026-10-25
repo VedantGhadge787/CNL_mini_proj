@@ -8,11 +8,6 @@ Responsibilities:
   - Send RFC-formatted SMTP reply lines (code + space/dash + message + CRLF).
   - Send POP3 +OK and -ERR response lines.
   - Send a POP3 multi-line response body terminated by a lone dot.
-
-All functions operate on ``socket.socket`` objects directly.  No state is kept.
-
-Imports needed:
-    import socket
 """
 import socket
 
@@ -30,17 +25,22 @@ def recv_line(sock: socket.socket, max_len: int = 1024) -> str:
     Raises:
         ConnectionResetError: If the remote end closes the connection.
         ValueError:           If the line exceeds *max_len* bytes.
-
-    TODO:
-        - Read one byte at a time into a buffer.
-        - Stop when buffer ends with b"\\r\\n".
-        - Decode as UTF-8 with errors="replace".
     """
-    # TODO: Implement
-    raise NotImplementedError
+    buf = bytearray()
+    while True:
+        chunk = sock.recv(1)
+        if not chunk:
+            raise ConnectionResetError("Connection closed before CRLF was received.")
+        buf.extend(chunk)
+        if len(buf) > max_len:
+            raise ValueError(f"Line length exceeds maximum limit of {max_len} bytes.")
+        if buf.endswith(b"\r\n"):
+            return buf[:-2].decode("utf-8", errors="replace")
 
 
-def send_reply(sock: socket.socket, code: int, message: str, last: bool = True) -> None:
+def send_reply(
+    sock: socket.socket, code: int, message: str, last: bool = True
+) -> None:
     """Send an SMTP reply line: ``<code><sep><message>\\r\\n``.
 
     Args:
@@ -49,33 +49,22 @@ def send_reply(sock: socket.socket, code: int, message: str, last: bool = True) 
         message: Human-readable reply text.
         last:    If True, sep is a space (final/only reply line).
                  If False, sep is ``-`` (multi-line continuation).
-
-    TODO:
-        - Format as f"{code}{' ' if last else '-'}{message}\\r\\n".encode()
-        - Call sock.sendall(...)
     """
-    # TODO: Implement
-    raise NotImplementedError
+    sep = " " if last else "-"
+    payload = f"{code}{sep}{message}\r\n".encode("utf-8")
+    sock.sendall(payload)
 
 
 def send_pop3_ok(sock: socket.socket, message: str = "") -> None:
-    """Send a POP3 ``+OK [message]\\r\\n`` response.
-
-    TODO:
-        - Format as b"+OK " + message.encode() + b"\\r\\n" (or just b"+OK\\r\\n")
-    """
-    # TODO: Implement
-    raise NotImplementedError
+    """Send a POP3 ``+OK [message]\\r\\n`` response."""
+    text = f"+OK {message}".strip() + "\r\n"
+    sock.sendall(text.encode("utf-8"))
 
 
 def send_pop3_err(sock: socket.socket, message: str = "") -> None:
-    """Send a POP3 ``-ERR [message]\\r\\n`` response.
-
-    TODO:
-        - Format as b"-ERR " + message.encode() + b"\\r\\n"
-    """
-    # TODO: Implement
-    raise NotImplementedError
+    """Send a POP3 ``-ERR [message]\\r\\n`` response."""
+    text = f"-ERR {message}".strip() + "\r\n"
+    sock.sendall(text.encode("utf-8"))
 
 
 def send_multiline(sock: socket.socket, lines: list[str]) -> None:
@@ -83,11 +72,11 @@ def send_multiline(sock: socket.socket, lines: list[str]) -> None:
 
     Each string in *lines* is sent as ``<line>\\r\\n``.
     A terminating ``b".\\r\\n"`` is appended at the end.
-
-    TODO:
-        - Iterate lines, encode and sendall each.
-        - Dot-stuff any line starting with '.'.
-        - Send b".\\r\\n" as terminator.
     """
-    # TODO: Implement
-    raise NotImplementedError
+    parts: list[bytes] = []
+    for line in lines:
+        if line.startswith("."):
+            line = "." + line  # POP3 byte stuffing
+        parts.append(f"{line}\r\n".encode("utf-8"))
+    parts.append(b".\r\n")
+    sock.sendall(b"".join(parts))

@@ -1,6 +1,6 @@
 # Step 03 — User Management & Storage
 
-**Status:** [ ] not started
+**Status:** [x] done
 
 ---
 
@@ -10,6 +10,7 @@ When this step is done:
 - `auth/user_manager.py` can create users (with salted password hashes), verify passwords, and check existence against a SQLite database.
 - `storage/mailbox.py` can deliver, list, read, delete messages, and generate stable UIDs for POP3 — all with thread-safe per-user locking.
 - `scripts/create_user.py` is functional as a CLI tool.
+
 
 ---
 
@@ -192,16 +193,17 @@ if __name__ == "__main__":
 
 ## 5. Acceptance Criteria
 
-- [ ] `python scripts/create_user.py alice secret` prints `User 'alice' created successfully.`
-- [ ] Running it again prints `Error: user 'alice' already exists.`
-- [ ] `user_exists("alice")` returns `True`.
-- [ ] `verify_password("alice", "secret")` returns `True`.
-- [ ] `verify_password("alice", "wrong")` returns `False`.
-- [ ] `deliver("alice", b"From: test\r\n\r\nHello")` creates a `.eml` file in `data/mailboxes/alice/new/`.
-- [ ] `list_messages("alice")` returns a list with 1 entry after delivery.
-- [ ] `read_message("alice", 1)` returns the delivered bytes.
-- [ ] `delete_message("alice", 1)` removes the file.
-- [ ] `pytest tests/test_mailbox.py -v` passes.
+- [x] `python scripts/create_user.py alice secret` prints `User 'alice' created successfully.`
+- [x] Running it again prints `Error: user 'alice' already exists.`
+- [x] `user_exists("alice")` returns `True`.
+- [x] `verify_password("alice", "secret")` returns `True`.
+- [x] `verify_password("alice", "wrong")` returns `False`.
+- [x] `deliver("alice", b"From: test\r\n\r\nHello")` creates a `.eml` file in `data/mailboxes/alice/new/`.
+- [x] `list_messages("alice")` returns a list with 1 entry after delivery.
+- [x] `read_message("alice", 1)` returns the delivered bytes.
+- [x] `delete_message("alice", 1)` removes the file.
+- [x] `pytest tests/test_mailbox.py -v` passes.
+
 
 ---
 

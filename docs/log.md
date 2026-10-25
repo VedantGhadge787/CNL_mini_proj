@@ -8,16 +8,55 @@
 
 | Field | Value |
 |-------|-------|
-| **Current implementation step** | Step 03 — User Management & Storage |
-| **Last completed step** | Step 02 — Config & Logging |
-| **Files with real logic** | `src/mailsys/config/settings.py`, `src/mailsys/common/logger.py` |
+| **Current implementation step** | Step 05 — MIME & Attachments |
+| **Last completed step** | Step 04 — SMTP Server Core |
+| **Files with real logic** | `settings.py`, `logger.py`, `auth/user_manager.py`, `storage/mailbox.py`, `scripts/create_user.py`, `common/protocol_utils.py`, `smtp/server.py`, `smtp/session.py`, `scripts/run_smtp.py` |
 | **Files with full content** | All docs/, AGENTS.md, README.md, requirements.txt, .gitignore, .env.example, pytest.ini |
 | **Known issues** | None |
-| **Next action** | Begin Step 03: implement auth/user_manager.py, storage/mailbox.py, scripts/create_user.py, tests/test_mailbox.py |
+| **Next action** | Begin Step 05: implement mime/message_builder.py, tests/test_mime.py |
 
 ---
 
 ## Log Entries (newest first)
+
+### [2026-10-25 13:33] Step 04: SMTP Server Core
+
+- **Changed:**
+  - Implemented `src/mailsys/common/protocol_utils.py` with `recv_line`, `send_reply`, `send_pop3_ok`, `send_pop3_err`, and `send_multiline`.
+  - Implemented `src/mailsys/smtp/server.py` with raw socket listener and thread-per-connection spawning daemon threads executing `SMTPSession.handle()`.
+  - Implemented `src/mailsys/smtp/session.py` with full RFC 5321 state machine:
+    - Commands: HELO, EHLO, MAIL FROM, RCPT TO, DATA, RSET, NOOP, VRFY, QUIT.
+    - Local recipient verification against `user_exists(user)`.
+    - RFC 5321 dot-unstuffing and message size threshold rejection with code 552.
+    - Standard RFC error handling: 500 (unrecognized), 501 (syntax), 503 (sequence), 550 (unknown user).
+    - Local mailbox delivery to `data/mailboxes/<user>/new/`.
+  - Implemented `scripts/run_smtp.py` entry point.
+  - Implemented complete test suite in `tests/test_smtp_session.py` covering greetings, commands, dot-stuffing, size limits, bad sequences, and full delivery pipeline.
+- **Why:** Core server networking functionality enabling direct SMTP client submission and storage.
+- **Key decisions:**
+  - Raw `socket` and `threading` implementation with zero third-party server wrappers.
+  - Dot-unstuffing applied during stream reading per RFC 5321 Section 4.5.2.
+- **Interfaces added:** `SMTPServer.start/stop`, `SMTPSession.handle`, `recv_line`, `send_reply`, `send_pop3_ok`, `send_pop3_err`, `send_multiline`.
+- **Tests:** `tests/test_smtp_session.py` all 8 tests pass; full test suite (50 tests) all pass.
+- **Next:** Begin Step 05 — MIME & Attachments
+
+
+### [2026-10-25 13:29] Step 03: User Management & Storage
+
+- **Changed:**
+  - Implemented `src/mailsys/auth/user_manager.py` with SQLite backing (`users` table), PBKDF2-HMAC-SHA256 password hashing (480k rounds, 32-byte salt), `hmac.compare_digest` verification, and existence check.
+  - Implemented `src/mailsys/storage/mailbox.py` with Maildir-style directory layout (`new/`, `cur/`, `Spam/new/`, `Spam/cur/`), per-user re-entrant locking (`threading.RLock`), message enumeration, reading, deletion, and stable UID generation.
+  - Implemented `scripts/create_user.py` CLI utility.
+  - Updated `tests/test_mailbox.py` with full unit tests and concurrency verification (10 parallel threads).
+  - Added `Settings.reload()` method to allow dynamic configuration and testing directory rebinding.
+- **Why:** Foundation for all server components — SMTP and POP3 both require authentication and mailbox storage.
+- **Key decisions:**
+  - Per-user locking uses `threading.RLock()` to prevent self-deadlocks during composite operations like message deletion.
+  - PBKDF2 with 480k rounds for secure password storage without external dependencies.
+- **Interfaces added:** `create_user`, `verify_password`, `user_exists`, `ensure_mailbox`, `deliver`, `list_messages`, `read_message`, `delete_message`, `generate_uid`.
+- **Tests:** `tests/test_mailbox.py` all 11 tests pass; CLI `create_user.py` verified; acceptance smoke tests pass.
+- **Next:** Begin Step 04 — SMTP Server Core
+
 
 ### [2026-10-25 13:16] Step 02: Config & Logging
 

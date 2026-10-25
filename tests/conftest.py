@@ -23,9 +23,12 @@ def isolated_data_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("SMTP_PORT", "0")
     monkeypatch.setenv("POP3_PORT", "0")
 
-    # Reload settings module so new environment variables take effect
+    # Reload settings module and instance in-place so new environment variables take effect
     import mailsys.config.settings
     s_mod = sys.modules["mailsys.config.settings"]
-    importlib.reload(s_mod)
+    s_mod.settings.reload()
     yield tmp_path
+    # Restore defaults on teardown
+    s_mod.settings.reload()
+
 

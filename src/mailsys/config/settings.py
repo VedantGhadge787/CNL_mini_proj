@@ -77,6 +77,22 @@ class Settings:
         """Path to SQLite database file."""
         return self.data_dir / "users.db"
 
+    def reload(self) -> None:
+        """Reload configuration values in-place from os.environ."""
+        self.smtp_host = os.environ.get("SMTP_HOST", "0.0.0.0")
+        self.smtp_port = int(os.environ.get("SMTP_PORT", "2525"))
+        self.pop3_host = os.environ.get("POP3_HOST", "0.0.0.0")
+        self.pop3_port = int(os.environ.get("POP3_PORT", "2110"))
+        self.local_domain = os.environ.get("LOCAL_DOMAIN", "localhost")
+        self.data_dir = Path(os.environ.get("DATA_DIR", "data"))
+        self.spam_threshold = int(os.environ.get("SPAM_THRESHOLD", "5"))
+        self.log_level = os.environ.get("LOG_LEVEL", "INFO")
+        self.max_message_size = int(
+            os.environ.get("MAX_MESSAGE_SIZE", str(10 * 1024 * 1024))
+        )
+        self.socket_timeout = int(os.environ.get("SOCKET_TIMEOUT", "300"))
+
 
 # Module-level singleton — import this everywhere
 settings = Settings()
+

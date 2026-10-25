@@ -13,24 +13,8 @@ Directory layout:
 
 Filename format:
     <timestamp>.<pid>.<sequence>.<hostname>.eml
-
-Provides:
-  - Thread-safe delivery of raw .eml messages to new/ or Spam/new/.
-  - Enumeration of messages (sorted oldest first by filename).
-  - Reading message content by 1-based index.
-  - Deletion of message by 1-based index.
-  - Stable UID generation (MD5 hash of message filename) for POP3 UIDL.
-
-Imports needed:
-    import itertools
-    import os
-    import socket
-    import threading
-    import time
-    from pathlib import Path
-    from mailsys.common.logger import get_logger
-    from mailsys.config.settings import settings
 """
+import hashlib
 import itertools
 import os
 import socket
@@ -43,16 +27,18 @@ from mailsys.config.settings import settings
 logger = get_logger(__name__)
 
 _counter = itertools.count()
-_locks: dict[str, threading.Lock] = {}
+_locks: dict[str, threading.RLock] = {}
 _locks_meta = threading.Lock()
 
 
-def _get_lock(username: str) -> threading.Lock:
-    """Return the threading.Lock for the given user, creating it if needed."""
+def _get_lock(username: str) -> threading.RLock:
+    """Return the threading.RLock for the given user, creating it if needed."""
+    uname = username.strip().lower()
     with _locks_meta:
-        if username not in _locks:
-            _locks[username] = threading.Lock()
-        return _locks[username]
+        if uname not in _locks:
+            _locks[uname] = threading.RLock()
+        return _locks[uname]
+
 
 
 def _make_filename() -> str:
@@ -72,14 +58,14 @@ def ensure_mailbox(username: str) -> Path:
 
     Returns:
         Path: The mailbox root directory path.
-
-    TODO:
-        - Determine mailbox root: settings.mailboxes_dir / username
-        - Create new/, cur/, Spam/new/, Spam/cur/ subdirectories with parents=True, exist_ok=True
-        - Return mailbox root Path
     """
-    # TODO: Implement
-    raise NotImplementedError
+    uname = username.strip().lower()
+    root = settings.mailboxes_dir / uname
+    (root / "new").mkdir(parents=True, exist_ok=True)
+    (root / "cur").mkdir(parents=True, exist_ok=True)
+    (root / "Spam" / "new").mkdir(parents=True, exist_ok=True)
+    (root / "Spam" / "cur").mkdir(parents=True, exist_ok=True)
+    return root
 
 
 def deliver(username: str, raw_message: bytes, spam: bool = False) -> Path:
@@ -94,16 +80,25 @@ def deliver(username: str, raw_message: bytes, spam: bool = False) -> Path:
 
     Returns:
         Path: The Path of the stored file.
-
-    TODO:
-        - Lock user mailbox with _get_lock(username)
-        - ensure_mailbox(username)
-        - Target folder: (mailbox / "Spam" / "new") if spam else (mailbox / "new")
-        - Write raw_message with "wb" to target_folder / _make_filename()
-        - Log delivery and return file Path
     """
-    # TODO: Implement
-    raise NotImplementedError
+    uname = username.strip().lower()
+    with _get_lock(uname):
+        root = ensure_mailbox(uname)
+        target_dir = (root / "Spam" / "new") if spam else (root / "new")
+        target_dir.mkdir(parents=True, exist_ok=True)
+
+        filename = _make_filename()
+        filepath = target_dir / filename
+        filepath.write_bytes(raw_message)
+
+        logger.debug(
+            "Delivered %d bytes for '%s' to %s (spam=%s)",
+            len(raw_message),
+            uname,
+            filepath,
+            spam,
+        )
+        return filepath
 
 
 def list_messages(username: str) -> list[tuple[int, Path, int]]:
@@ -116,15 +111,22 @@ def list_messages(username: str) -> list[tuple[int, Path, int]]:
 
     Returns:
         list[tuple[int, Path, int]]: List of (index, path, size) tuples.
-
-    TODO:
-        - Lock user mailbox with _get_lock(username)
-        - Scan new/ and cur/ directories for .eml files
-        - Sort by filename ascending
-        - Return [(idx, path, path.stat().st_size) for idx, path in enumerate(files, 1)]
     """
-    # TODO: Implement
-    raise NotImplementedError
+    uname = username.strip().lower()
+    with _get_lock(uname):
+        root = ensure_mailbox(uname)
+        files: list[Path] = []
+        for folder_name in ("new", "cur"):
+            folder = root / folder_name
+            if folder.is_dir():
+                for entry in folder.iterdir():
+                    if entry.is_file() and entry.name.endswith(".eml"):
+                        files.append(entry)
+
+        sorted_files = sorted(files, key=lambda f: f.name)
+        return [
+            (idx, f, f.stat().st_size) for idx, f in enumerate(sorted_files, 1)
+        ]
 
 
 def read_message(username: str, index: int) -> bytes:
@@ -139,14 +141,14 @@ def read_message(username: str, index: int) -> bytes:
 
     Raises:
         IndexError: If index is out of range.
-
-    TODO:
-        - Call list_messages(username)
-        - Validate 1 <= index <= len(messages)
-        - Read and return file bytes
     """
-    # TODO: Implement
-    raise NotImplementedError
+    messages = list_messages(username)
+    if index < 1 or index > len(messages):
+        raise IndexError(
+            f"Message index {index} out of range (1..{len(messages)})"
+        )
+    _, path, _ = messages[index - 1]
+    return path.read_bytes()
 
 
 def delete_message(username: str, index: int) -> None:
@@ -160,15 +162,18 @@ def delete_message(username: str, index: int) -> None:
 
     Raises:
         IndexError: If index is out of range.
-
-    TODO:
-        - Lock user mailbox with _get_lock(username)
-        - Call list_messages(username)
-        - Validate index
-        - Unlink/delete target file
     """
-    # TODO: Implement
-    raise NotImplementedError
+    uname = username.strip().lower()
+    with _get_lock(uname):
+        messages = list_messages(uname)
+        if index < 1 or index > len(messages):
+            raise IndexError(
+                f"Message index {index} out of range (1..{len(messages)})"
+            )
+        _, path, _ = messages[index - 1]
+        if path.exists():
+            path.unlink()
+            logger.debug("Deleted message at index %d (%s)", index, path)
 
 
 def generate_uid(filepath: Path) -> str:
@@ -181,9 +186,5 @@ def generate_uid(filepath: Path) -> str:
 
     Returns:
         str: MD5 hex digest of the basename.
-
-    TODO:
-        - Compute hashlib.md5(filepath.name.encode()).hexdigest()
     """
-    # TODO: Implement
-    raise NotImplementedError
+    return hashlib.md5(filepath.name.encode("utf-8")).hexdigest()

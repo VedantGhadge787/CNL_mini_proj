@@ -1,6 +1,6 @@
 # Step 04 — SMTP Server Core
 
-**Status:** [ ] not started
+**Status:** [x] done
 
 ---
 
@@ -241,17 +241,18 @@ if __name__ == "__main__":
 
 ## 5. Acceptance Criteria
 
-- [ ] `python scripts/run_smtp.py` starts without error and prints the bind address.
-- [ ] Telnet to port 2525 shows `220 <domain> SMTP ready`.
-- [ ] `HELO test` returns `250 OK`.
-- [ ] `MAIL FROM:<alice@localhost>` returns `250 OK`.
-- [ ] `RCPT TO:<nobody@localhost>` (unknown user) returns `550 ...`.
-- [ ] `RCPT TO:<bob@localhost>` (known user) returns `250 OK`.
-- [ ] `DATA` returns `354 ...`.
-- [ ] Sending message lines and `.` delivers a `.eml` file in `data/mailboxes/bob/new/`.
-- [ ] A message > 10 MB is rejected with `552`.
-- [ ] `QUIT` returns `221 Bye`.
-- [ ] `pytest tests/test_smtp_session.py -v` passes.
+- [x] `python scripts/run_smtp.py` starts without error and prints the bind address.
+- [x] Telnet to port 2525 shows `220 <domain> SMTP ready`.
+- [x] `HELO test` returns `250 OK`.
+- [x] `MAIL FROM:<alice@localhost>` returns `250 OK`.
+- [x] `RCPT TO:<nobody@localhost>` (unknown user) returns `550 ...`.
+- [x] `RCPT TO:<bob@localhost>` (known user) returns `250 OK`.
+- [x] `DATA` returns `354 ...`.
+- [x] Sending message lines and `.` delivers a `.eml` file in `data/mailboxes/bob/new/`.
+- [x] A message > 10 MB is rejected with `552`.
+- [x] `QUIT` returns `221 Bye`.
+- [x] `pytest tests/test_smtp_session.py -v` passes.
+
 
 ---
 
