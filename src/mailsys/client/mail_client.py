@@ -135,8 +135,29 @@ class MailClient:
             except Exception:
                 pass
 
+    def fetch_message_bytes(self, index: int) -> bytes:
+        """Fetch the full raw message at index via POP3 RETR as bytes.
+
+        Args:
+            index: 1-based message index.
+
+        Returns:
+            bytes: Raw message bytes without decoding loss.
+        """
+        pop = poplib.POP3(self.pop3_host, self.pop3_port)
+        try:
+            pop.user(self.username)
+            pop.pass_(self.password)
+            _, lines, _ = pop.retr(index)
+            return b"\r\n".join(lines)
+        finally:
+            try:
+                pop.quit()
+            except Exception:
+                pass
+
     def fetch_message(self, index: int) -> str:
-        """Fetch the full raw message at index via POP3 RETR.
+        """Fetch the full raw message at index via POP3 RETR as decoded string.
 
         Args:
             index: 1-based message index.
@@ -144,17 +165,8 @@ class MailClient:
         Returns:
             str: Raw message string.
         """
-        pop = poplib.POP3(self.pop3_host, self.pop3_port)
-        try:
-            pop.user(self.username)
-            pop.pass_(self.password)
-            _, lines, _ = pop.retr(index)
-            return b"\r\n".join(lines).decode("utf-8", errors="replace")
-        finally:
-            try:
-                pop.quit()
-            except Exception:
-                pass
+        return self.fetch_message_bytes(index).decode("utf-8", errors="replace")
+
 
     def delete_message(self, index: int) -> None:
         """Mark message at index for deletion and commit via QUIT.

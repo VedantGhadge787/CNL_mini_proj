@@ -23,6 +23,7 @@ from mailsys.common.logger import get_logger
 from mailsys.config.settings import settings
 from mailsys.mime.message_builder import (
     extract_attachments,
+    get_attachment_parts,
     get_text_body,
     list_attachments,
     parse_message,
@@ -218,6 +219,7 @@ class MailApp:
         self._messages: list[dict] = []
         self._current_msg_index: int | None = None
         self._current_parsed_msg: EmailMessage | None = None
+        self._current_attachments: list[dict] = []
 
         self.login_frame: ttk.Frame | None = None
         self.main_frame: ttk.Frame | None = None
@@ -397,6 +399,10 @@ class MailApp:
         self.att_lbl = ttk.Label(self.preview_header, text="Attachments: None")
         self.att_lbl.pack(anchor=tk.W)
 
+        self.att_box = ttk.LabelFrame(
+            self.preview_header, text="Attached Files (Click to Download)", padding=6
+        )
+
         self._build_preview_actions(parent)
         self._build_preview_body(parent)
 
@@ -503,10 +509,10 @@ class MailApp:
         thread.start()
 
     def _fetch_message_worker(self, index: int) -> None:
-        """Retrieve raw message in background thread."""
+        """Retrieve raw message bytes in background thread."""
         try:
-            raw_text = self.client.fetch_message(index)
-            self.root.after(0, self._display_message, index, raw_text)
+            raw_bytes = self.client.fetch_message_bytes(index)
+            self.root.after(0, self._display_message, index, raw_bytes)
         except Exception as err:
             logger.warning("Failed to fetch message #%d: %s", index, err)
             self.root.after(0, self._on_fetch_failure, str(err))
@@ -518,33 +524,105 @@ class MailApp:
             "Fetch Error", f"Failed to retrieve message:\n{err_msg}", parent=self.root
         )
 
-    def _display_message(self, index: int, raw_text: str) -> None:
+    def _display_message(self, index: int, raw_data: bytes | str) -> None:
         """Parse and display message content on the main thread."""
         self._current_msg_index = index
         self.delete_btn.config(state="normal")
         self.status_bar.config(text=f"Viewing message #{index}")
 
-        parsed = parse_message(raw_text.encode("utf-8"))
+        raw_bytes = (
+            raw_data.encode("utf-8") if isinstance(raw_data, str) else raw_data
+        )
+        parsed = parse_message(raw_bytes)
         self._current_parsed_msg = parsed
 
         self.from_lbl.config(text=f"From: {parsed.get('From', '')}")
         self.date_lbl.config(text=f"Date: {parsed.get('Date', '')}")
         self.subj_lbl.config(text=f"Subject: {parsed.get('Subject', '')}")
 
-        attachments = list_attachments(parsed)
-        if attachments:
-            att_names = ", ".join(f"{name} ({size} B)" for name, _, size in attachments)
-            self.att_lbl.config(text=f"Attachments: {att_names}")
-            self.save_att_btn.config(state="normal")
-        else:
-            self.att_lbl.config(text="Attachments: None")
-            self.save_att_btn.config(state="disabled")
+        self._current_attachments = get_attachment_parts(parsed)
+        self._render_attachments()
 
-        body = get_text_body(parsed) or raw_text
+        body = get_text_body(parsed)
+        if not body.strip():
+            if self._current_attachments:
+                att_names = ", ".join(a["filename"] for a in self._current_attachments)
+                body = f"(No message text body. Attachment: {att_names})"
+            else:
+                body = "(Empty message)"
+
         self.preview_text.config(state="normal")
         self.preview_text.delete("1.0", tk.END)
         self.preview_text.insert(tk.END, body)
         self.preview_text.config(state="disabled")
+
+    def _render_attachments(self) -> None:
+        """Render downloadable buttons and metadata for each attached file."""
+        for child in self.att_box.winfo_children():
+            child.destroy()
+
+        if not self._current_attachments:
+            self.att_box.pack_forget()
+            self.att_lbl.config(text="Attachments: None")
+            self.save_att_btn.config(state="disabled")
+            return
+
+        names = ", ".join(a["filename"] for a in self._current_attachments)
+        self.att_lbl.config(text=f"Attachments: {names}")
+        self.save_att_btn.config(state="normal")
+        self.att_box.pack(fill=tk.X, pady=(6, 2))
+
+        for att in self._current_attachments:
+            row = ttk.Frame(self.att_box)
+            row.pack(fill=tk.X, pady=3)
+
+            size_val = att["size"]
+            size_str = (
+                f"{size_val / 1024:.1f} KB"
+                if size_val >= 1024
+                else f"{size_val} B"
+            )
+            lbl = ttk.Label(
+                row,
+                text=f"📎  {att['filename']}  ({size_str})",
+                font=("Segoe UI", 9, "bold"),
+            )
+            lbl.pack(side=tk.LEFT, padx=5)
+
+            btn = ttk.Button(
+                row,
+                text=f"Download / Save As...",
+                command=lambda a=att: self._save_single_attachment(a),
+            )
+            btn.pack(side=tk.RIGHT, padx=5)
+
+    def _save_single_attachment(self, att: dict) -> None:
+        """Prompt user with Save As dialog and write attachment to disk."""
+        filename = att["filename"]
+        suffix = Path(filename).suffix
+        save_path = filedialog.asksaveasfilename(
+            parent=self.root,
+            title=f"Save Attachment: {filename}",
+            initialfile=filename,
+            defaultextension=suffix,
+        )
+        if not save_path:
+            return
+
+        try:
+            Path(save_path).write_bytes(att["payload"])
+            messagebox.showinfo(
+                "Attachment Saved",
+                f"Successfully saved '{filename}' to:\n{save_path}",
+                parent=self.root,
+            )
+        except Exception as err:
+            logger.exception("Failed to save attachment %s: %s", filename, err)
+            messagebox.showerror(
+                "Save Error",
+                f"Could not save file '{filename}':\n{err}",
+                parent=self.root,
+            )
 
     def _on_delete_click(self) -> None:
         """Confirm and delete currently selected message."""
@@ -579,6 +657,7 @@ class MailApp:
         """Clear message preview and refresh inbox after deletion."""
         self._current_msg_index = None
         self._current_parsed_msg = None
+        self._current_attachments.clear()
         self.delete_btn.config(state="disabled")
         self.save_att_btn.config(state="disabled")
 
@@ -586,6 +665,7 @@ class MailApp:
         self.date_lbl.config(text="Date: ")
         self.subj_lbl.config(text="Subject: ")
         self.att_lbl.config(text="Attachments: None")
+        self.att_box.pack_forget()
 
         self.preview_text.config(state="normal")
         self.preview_text.delete("1.0", tk.END)
@@ -604,7 +684,7 @@ class MailApp:
         )
 
     def _save_attachments_click(self) -> None:
-        """Save attachments of current message to a user-chosen directory."""
+        """Save all attachments of current message to a user-chosen directory."""
         if not self._current_parsed_msg:
             return
         dest_dir = filedialog.askdirectory(
@@ -635,4 +715,6 @@ class MailApp:
         self._messages.clear()
         self._current_msg_index = None
         self._current_parsed_msg = None
+        self._current_attachments.clear()
         self.show_login()
+

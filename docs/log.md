@@ -19,6 +19,16 @@
 
 ## Log Entries (newest first)
 
+### [2026-10-30 00:28] Bug Fix: Attachment Viewing & File Downloading
+- **Changed:**
+  - `src/mailsys/mime/message_builder.py`: Added `get_attachment_parts(msg)` returning attachment metadata and decoded binary payloads. Updated `extract_attachments` and `list_attachments`.
+  - `src/mailsys/client/mail_client.py`: Added `fetch_message_bytes(index)` to retrieve POP3 messages directly in byte form to avoid Unicode replacement corruption of binary attachments.
+  - `src/mailsys/client/app.py`:
+    - Fixed raw MIME fallback bug: if `get_text_body` is empty, display `"(No message text body. Attachment: ...)"` instead of dumping raw base64 noise into the message reader.
+    - Added dedicated interactive `Attachments` box in the message reader with file names, formatted sizes (KB/MB), and a prominent **`[ Download / Save As... ]`** button for each file.
+- **Why:** Enable direct binary file downloading and prevent raw base64 text from rendering in the preview pane.
+- **Tests:** All 75 tests passing; roundtrip PNG binary payload verified.
+
 ### [2026-10-29 23:20] Step 11: Demo & Report
 - **Changed:**
   - Created `docs/demo-script.md` providing a 10–15 minute step-by-step presentation walkthrough covering account provisioning, GUI sending, POP3 retrieval, spam filtering, UPDATE state semantics, and test verification.

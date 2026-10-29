@@ -180,6 +180,35 @@ def get_html_body(msg: EmailMessage) -> str | None:
     return None
 
 
+def get_attachment_parts(msg: EmailMessage) -> list[dict]:
+    """Extract all attachment parts with their filename, content-type, size, and payload bytes.
+
+    Skips parts with Content-Disposition: inline.
+
+    Args:
+        msg: Parsed EmailMessage.
+
+    Returns:
+        list[dict]: List of dictionaries with keys:
+                    'filename', 'content_type', 'size', 'payload'.
+    """
+    attachments: list[dict] = []
+    for part in msg.iter_attachments():
+        if part.get_content_disposition() == "inline":
+            continue
+        safe_name = _sanitize_filename(part.get_filename())
+        content_type = part.get_content_type()
+        payload = part.get_payload(decode=True)
+        size = len(payload) if payload is not None else 0
+        attachments.append({
+            "filename": safe_name,
+            "content_type": content_type,
+            "size": size,
+            "payload": payload if payload is not None else b"",
+        })
+    return attachments
+
+
 def extract_attachments(msg: EmailMessage, dest_dir: Path) -> list[Path]:
     """Save all attachment parts to dest_dir and return a list of saved Paths.
 
@@ -195,22 +224,17 @@ def extract_attachments(msg: EmailMessage, dest_dir: Path) -> list[Path]:
     saved: list[Path] = []
     dest_dir.mkdir(parents=True, exist_ok=True)
 
-    for part in msg.iter_attachments():
-        if part.get_content_disposition() == "inline":
-            continue
-        safe_name = _sanitize_filename(part.get_filename())
+    for item in get_attachment_parts(msg):
+        safe_name = item["filename"]
         out_path = dest_dir / safe_name
-        if out_path in saved:
+        if out_path in saved or out_path.exists():
             stem, suffix = Path(safe_name).stem, Path(safe_name).suffix
             counter = 1
             while out_path in saved or out_path.exists():
                 out_path = dest_dir / f"{stem}_{counter}{suffix}"
                 counter += 1
 
-        payload = part.get_payload(decode=True)
-        if payload is None:
-            continue
-        out_path.write_bytes(payload)
+        out_path.write_bytes(item["payload"])
         saved.append(out_path)
 
     logger.debug("Extracted %d attachments to %s", len(saved), dest_dir)
@@ -228,13 +252,8 @@ def list_attachments(msg: EmailMessage) -> list[tuple[str, str, int]]:
     Returns:
         list[tuple[str, str, int]]: List of (filename, content_type, size) tuples.
     """
-    attachments: list[tuple[str, str, int]] = []
-    for part in msg.iter_attachments():
-        if part.get_content_disposition() == "inline":
-            continue
-        safe_name = _sanitize_filename(part.get_filename())
-        content_type = part.get_content_type()
-        payload = part.get_payload(decode=True)
-        size = len(payload) if payload is not None else 0
-        attachments.append((safe_name, content_type, size))
-    return attachments
+    return [
+        (item["filename"], item["content_type"], item["size"])
+        for item in get_attachment_parts(msg)
+    ]
+
