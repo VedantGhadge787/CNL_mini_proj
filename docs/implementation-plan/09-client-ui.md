@@ -1,6 +1,6 @@
 # Step 09 — Client UI
 
-**Status:** [ ] not started
+**Status:** [x] done
 
 ---
 
@@ -195,14 +195,14 @@ if __name__ == "__main__":
 
 ## 5. Acceptance Criteria
 
-- [ ] `python scripts/run_client.py` opens the login window without errors.
-- [ ] Logging in with valid credentials shows the inbox list.
-- [ ] Clicking a message displays its content in the message pane.
-- [ ] Clicking Compose opens a compose window.
-- [ ] "Add Attachment" opens a file dialog and lists the chosen file.
-- [ ] Clicking Send delivers the message (verify file appears in recipient's mailbox).
-- [ ] Clicking Refresh updates the inbox list.
-- [ ] Invalid credentials shows an error dialog.
+- [x] `python scripts/run_client.py` opens the login window without errors.
+- [x] Logging in with valid credentials shows the inbox list.
+- [x] Clicking a message displays its content in the message pane.
+- [x] Clicking Compose opens a compose window.
+- [x] "Add Attachment" opens a file dialog and lists the chosen file.
+- [x] Clicking Send delivers the message (verify file appears in recipient's mailbox).
+- [x] Clicking Refresh updates the inbox list.
+- [x] Invalid credentials shows an error dialog.
 
 ---
 

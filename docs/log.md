@@ -8,16 +8,56 @@
 
 | Field | Value |
 |-------|-------|
-| **Current implementation step** | Step 09 — Client UI |
-| **Last completed step** | Step 08 — MX Lookup & Relay |
-| **Files with real logic** | `settings.py`, `logger.py`, `auth/user_manager.py`, `storage/mailbox.py`, `scripts/create_user.py`, `common/protocol_utils.py`, `smtp/server.py`, `smtp/session.py`, `smtp/relay.py`, `scripts/run_smtp.py`, `mime/message_builder.py`, `spam/filter.py`, `pop3/server.py`, `pop3/session.py`, `scripts/run_pop3.py` |
+| **Current implementation step** | Complete (All steps 00–11 done) |
+| **Last completed step** | Step 11 — Demo & Report |
+| **Files with real logic** | `settings.py`, `logger.py`, `auth/user_manager.py`, `storage/mailbox.py`, `scripts/create_user.py`, `common/protocol_utils.py`, `smtp/server.py`, `smtp/session.py`, `smtp/relay.py`, `scripts/run_smtp.py`, `mime/message_builder.py`, `spam/filter.py`, `pop3/server.py`, `pop3/session.py`, `scripts/run_pop3.py`, `client/mail_client.py`, `client/app.py`, `scripts/run_client.py` |
 | **Files with full content** | All docs/, AGENTS.md, README.md, requirements.txt, .gitignore, .env.example, pytest.ini |
 | **Known issues** | None |
-| **Next action** | Begin Step 09: implement the Tkinter mail client |
+| **Next action** | Project complete ✓ |
 
 ---
 
 ## Log Entries (newest first)
+
+### [2026-10-29 23:20] Step 11: Demo & Report
+- **Changed:**
+  - Created `docs/demo-script.md` providing a 10–15 minute step-by-step presentation walkthrough covering account provisioning, GUI sending, POP3 retrieval, spam filtering, UPDATE state semantics, and test verification.
+  - Created `docs/report-outline.md` structuring the academic/project report with abstract, theoretical background, architecture diagrams, implementation deep-dive, test results, limitations, and future work.
+  - Created `docs/viva-qa.md` containing 12+ essential viva/oral examination questions and technical answers.
+  - Created `docs/study-guide.md` offering an intuitive, high-level conceptual explanation of how the system works using real-world analogies, step-by-step flows, and simple breakdowns.
+- **Why:** Final project documentation and demonstration readiness.
+- **Key decisions:** N/A.
+- **Interfaces added:** None.
+- **Tests:** All 75 tests passing across entire project suite.
+- **Next:** Project complete ✓
+
+### [2026-10-29 23:18] Step 10: Testing & Validation
+- **Changed:**
+  - Fleshed out `tests/test_end_to_end.py` with real integration tests: `test_full_send_receive_flow`, `test_spam_routed_to_spam_folder`, and `test_attachment_send_and_retrieve`.
+  - Verified full test suite using ephemeral ports for concurrent SMTP and POP3 listeners.
+- **Why:** NFR-7 — complete end-to-end testing and validation.
+- **Key decisions:** Use verified spam keywords against threshold for spam routing test; round-trip binary verification for MIME attachment decoding.
+- **Interfaces added:** E2E test suite.
+- **Tests:** All 75 tests passing (`pytest tests/ -v`).
+- **Next:** Step 11 — Demo & Report
+
+### [2026-10-29 23:01] Step 09: Client UI
+
+- **Changed:**
+  - Implemented `src/mailsys/client/mail_client.py` wrapping standard `smtplib` and `poplib` with user authentication, inbox header retrieval with `TOP`, full message retrieval with `RETR`, deletion marking with `DELE` + `QUIT`, and MIME message sending with `build_message` and `sendmail`.
+  - Implemented `src/mailsys/client/app.py` providing a Tkinter GUI featuring `LoginFrame` (credential authentication), `MainFrame` with left `InboxPane` (inbox Listbox with refresh) and right `MessagePane` (message header preview, body viewer, attachment saving, and delete action), and `ComposeWindow` (recipients, subject, text body, and multi-file attachments).
+  - Ensured all network I/O operations execute in background threads (`threading.Thread`) and safely schedule UI updates on Tkinter's main thread using `root.after(0, ...)`.
+  - Implemented CLI entry point `scripts/run_client.py`.
+  - Exported `MailClient` and `MailApp` in `src/mailsys/client/__init__.py`.
+  - Added test suite `tests/test_mail_client.py` covering `MailClient` methods, live server interactions, and `MailApp` GUI headless lifecycle.
+- **Why:** FR-15 — desktop MUA using smtplib/poplib with graphical interface.
+- **Key decisions:**
+  - Background daemon threads for all network operations with thread-safe `root.after` dispatch to avoid freezing the UI.
+  - Added attachment listing and local file saving to user-selected directory from the preview pane.
+  - Added user logout flow allowing easy account switching between test users.
+- **Interfaces added:** `MailClient.authenticate`, `MailClient.list_inbox`, `MailClient.fetch_message`, `MailClient.delete_message`, `MailClient.send_message`, `MailApp`, `ComposeWindow`.
+- **Tests:** 7 new tests in `tests/test_mail_client.py`; all 75 project tests pass.
+- **Next:** Begin Step 10 — Testing & Validation
 
 ### [2026-10-25 20:15] Step 08: MX Lookup & Relay
 
